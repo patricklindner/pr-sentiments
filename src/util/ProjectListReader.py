@@ -2,7 +2,7 @@ class ProjectListReader:
 
     def __init__(self, path):
         file = open(path, "r")
-        self.projects = file.readlines()
+        self.projects = file.read().splitlines()
 
     def __iter__(self):
         self.index = 0
@@ -11,7 +11,8 @@ class ProjectListReader:
     def __next__(self):
         if self.index >= len(self.projects):
             raise StopIteration
-        project_name = self.projects[self.index].split("/")[-1]
-        project_url = self.projects[self.index]
+        project = self.projects[self.index].split("/")
+        project_name = project[0]
+        project_owner = project[1]
         self.index += 1
-        return project_name, project_url
+        return project_owner, project_name
