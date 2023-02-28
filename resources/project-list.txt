@@ -1,0 +1,10 @@
+https://github.com/tensorflow/tensorflow
+https://github.com/twbs/bootstrap
+https://github.com/opencv/opencv
+https://github.com/torvalds/linux
+https://github.com/facebook/react
+https://github.com/ant-design/ant-design
+https://github.com/kubernetes/kubernetes
+https://github.com/mrdoob/three.js
+https://github.com/qmk/qmk_firmware
+https://github.com/mui/material-ui
