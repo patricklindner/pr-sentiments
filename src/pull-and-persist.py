@@ -1,5 +1,3 @@
-import json
-
 from src.util.GithubApiPageIterator import GithubApiPageIterator
 from src.util.ProjectListReader import ProjectListReader
 from src.util.mongo import get_database
@@ -9,8 +7,7 @@ pull_request_url = base_url + "/repos/{owner}/{repo}/pulls"
 
 reader = ProjectListReader("../resources/project-list.txt")
 
-db = get_database("pull-requests")
-raw_issues_collection = db["raw"]
+db_raw = get_database("pull-requests-raw")
 
 for owner, repo in reader:
     print("pulling repo", repo)
@@ -20,17 +17,22 @@ for owner, repo in reader:
         params={"state": "closed", "per_page": 100}
     )
 
+    collection = db_raw[repo]
+    page_number = 0
     # iterate over all pages
     for page in pageIterator:
+        print("progress {:.2f}%".format((page_number / pageIterator.total_pages * 100)))
+        page_number += 1
         # iterate over all elements of page
         for pr in page:
             # check if github id is already in database
             item = {
                 "github_id": pr["id"],
-                "repo": repo,
                 "title": pr["title"],
+                "body": pr["body"],
                 "created_at": pr["created_at"],
                 "closed_at": pr["closed_at"],
-                "merged_at": pr["merged_at"]
+                "merged_at": pr["merged_at"],
+                "user_id": pr["user"]["id"]
             }
-            raw_issues_collection.insert_one(item)
+            collection.insert_one(item)

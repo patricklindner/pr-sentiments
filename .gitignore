@@ -371,3 +371,5 @@ pyvenv.cfg
 pip-selfcheck.json
 
 # End of https://www.toptal.com/developers/gitignore/api/jetbrains,python,venv,pycharm
+
+resources/token.txt

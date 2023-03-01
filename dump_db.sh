@@ -1,2 +1,2 @@
-docker exec pr_sentiment_mongo mongoexport --username=root --password=s3cret --authenticationDatabase=admin --db=pull_requests --collection=raw --out=/tmp/dumps/raw.json
-docker exec pr_sentiment_mongo mongoexport --username=root --password=s3cret --authenticationDatabase=admin --db=pull_requests --collection=processed --out=/tmp/dumps/processed.json
+docker exec pr_sentiment_mongo mongoexport --username=root --password=s3cret --authenticationDatabase=admin --db=pull-requests --collection=raw --out=/tmp/dumps/raw.json
+docker exec pr_sentiment_mongo mongoexport --username=root --password=s3cret --authenticationDatabase=admin --db=pull-requests --collection=processed --out=/tmp/dumps/processed.json
