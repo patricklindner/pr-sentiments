@@ -25,9 +25,8 @@ for owner, repo in reader:
         page_number += 1
         # iterate over all elements of page
         for pr in page:
-            # check if github id is already in database
             item = {
-                "github_id": pr["id"],
+                "_id": pr["id"],
                 "title": pr["title"],
                 "body": pr["body"],
                 "created_at": pr["created_at"],
@@ -35,4 +34,7 @@ for owner, repo in reader:
                 "merged_at": pr["merged_at"],
                 "user_id": pr["user"]["id"]
             }
-            collection.insert_one(item)
+            try:
+                collection.insert_one(item)
+            except:
+                print("Skipping pull request with id", pr["id"])
