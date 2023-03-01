@@ -5,6 +5,8 @@ services:
     container_name: pr_sentiment_mongo
     image: mongo
     restart: always
+    ports:
+      - "27017:27017"
     volumes:
       - type: bind
         source: ./mongodump

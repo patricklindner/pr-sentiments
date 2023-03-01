@@ -1,13 +1,36 @@
+import json
+
+from src.util.GithubApiPageIterator import GithubApiPageIterator
 from src.util.ProjectListReader import ProjectListReader
-import requests
+from src.util.mongo import get_database
 
 base_url = "https://api.github.com"
 pull_request_url = base_url + "/repos/{owner}/{repo}/pulls"
 
 reader = ProjectListReader("../resources/project-list.txt")
 
+db = get_database("pull-requests")
+raw_issues_collection = db["raw"]
+
 for owner, repo in reader:
-    print(owner, repo)
-    resp = requests.get(pull_request_url.replace("{owner}", owner).replace("{repo}", repo))
-    print(resp.url)
-    print(resp.json())
+    print("pulling repo", repo)
+
+    pageIterator = GithubApiPageIterator(
+        pull_request_url.replace("{owner}", owner).replace("{repo}", repo),
+        params={"state": "closed", "per_page": 100}
+    )
+
+    # iterate over all pages
+    for page in pageIterator:
+        # iterate over all elements of page
+        for pr in page:
+            # check if github id is already in database
+            item = {
+                "github_id": pr["id"],
+                "repo": repo,
+                "title": pr["title"],
+                "created_at": pr["created_at"],
+                "closed_at": pr["closed_at"],
+                "merged_at": pr["merged_at"]
+            }
+            raw_issues_collection.insert_one(item)
