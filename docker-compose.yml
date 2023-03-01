@@ -1,0 +1,22 @@
+version: "3.1"
+
+services:
+  mongo:
+    container_name: pr_sentiment_mongo
+    image: mongo
+    restart: always
+    volumes:
+      - type: bind
+        source: ./mongodump
+        target: /tmp/dumps
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: s3cret
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://root:s3cret@mongo:27017/
