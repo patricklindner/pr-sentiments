@@ -12,7 +12,7 @@ class ProjectListReader:
         if self.index >= len(self.projects):
             raise StopIteration
         project = self.projects[self.index].split("/")
-        project_name = project[0]
-        project_owner = project[1]
+        project_owner = project[0]
+        project_name = project[1]
         self.index += 1
         return project_owner, project_name
