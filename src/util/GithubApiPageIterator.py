@@ -1,6 +1,7 @@
 import re
 
 import requests
+from urllib.parse import urlparse, ParseResult, parse_qs, urlencode
 
 
 class GithubApiPageIterator:
@@ -19,6 +20,8 @@ class GithubApiPageIterator:
     def __iter__(self):
         self.next_url = self.start_url
         self.first_request = True
+        self.jumped = False
+        self.page_number = 0
         return self
 
     def __next__(self):
@@ -34,9 +37,44 @@ class GithubApiPageIterator:
             if resp.status_code >= 200:
                 print("Fetched from:", resp.url)
                 self.next_url = self.__extract_next_link(resp.headers.get("link"))
+                self.page_number += 1
                 return resp.json()
             else:
                 print("Something went wrong", resp)
+
+    def jump(self, collection_size):
+        """
+        This function jumps after the first duplicate is found several pages.
+
+        Args:
+            collection_size (int): The number of rows in mongoDB table
+        """
+        if self.jumped:
+            return
+        self.jumped = True
+
+        parsed = urlparse(self.next_url)
+        query_filters = parse_qs(parsed.query)
+        query_filters = {key: query_filters[key][0] for key in query_filters}
+        per_page = query_filters['per_page']
+        self.page_number = collection_size // int(per_page) + 1
+
+        if self.page_number >= self.total_pages:
+            self.next_url = None
+        else:
+            query_filters['page'] = self.page_number
+            self.next_url = ParseResult(
+                scheme=parsed.scheme,
+                netloc=parsed.hostname,
+                path=parsed.path,
+                params=parsed.params,
+                query=urlencode(query_filters),
+                fragment=parsed.fragment
+            ).geturl()
+
+    def print_progress(self):
+        percent = self.page_number / self.total_pages * 100
+        print(f"progress {percent:.2f}%")
 
     @staticmethod
     def __extract_next_link(link_string):

@@ -1,6 +1,7 @@
 from src.util.GithubApiPageIterator import GithubApiPageIterator
 from src.util.ProjectListReader import ProjectListReader
 from src.util.mongo import get_database
+from pymongo.errors import DuplicateKeyError
 
 base_url = "https://api.github.com"
 pull_request_url = base_url + "/repos/{owner}/{repo}/pulls"
@@ -18,11 +19,8 @@ for owner, repo in reader:
     )
 
     collection = db_raw[repo]
-    page_number = 0
     # iterate over all pages
     for page in pageIterator:
-        print("progress {:.2f}%".format((page_number / pageIterator.total_pages * 100)))
-        page_number += 1
         # iterate over all elements of page
         for pr in page:
             item = {
@@ -36,5 +34,13 @@ for owner, repo in reader:
             }
             try:
                 collection.insert_one(item)
-            except:
+                print('.', end='')
+            except DuplicateKeyError:
+                print('D', end='')
+                if not pageIterator.jumped:
+                    pageIterator.jump(collection.count_documents({}))
+            except Exception as e:
+                print("Unexepected Error!:", e)
                 print("Skipping pull request with id", pr["id"])
+        print()
+        pageIterator.print_progress()
