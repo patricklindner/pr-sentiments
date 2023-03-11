@@ -1,8 +1,8 @@
 #!/bin/bash
 
 filename=resources/project-list.txt
-username=admin
-password=password
+username=root
+password=s3cert
 
 # Check if the file exists and is readable
 if [ ! -r "$filename" ]; then
@@ -19,7 +19,7 @@ while read -r line; do
 	# Dump the collection into a json file
 	echo -e "\tDropping collection $repo..."
     jscommand=$(echo "db.$repo.drop()")
-    docker exec pr_sentiment_mongo mongo pull-requests-raw -u admin -p password --authenticationDatabase admin --eval $jscommand
+    docker exec pr_sentiment_mongo mongo pull-requests-raw -u $username -p $password --authenticationDatabase admin --eval $jscommand
 
 done < "$filename"
 
