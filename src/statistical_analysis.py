@@ -10,7 +10,7 @@ from dateutil import parser
 DB_NAME = 'pull-requests-raw'
 BAR_LENGTH = 50
 REPO_FILE_PATH = "../resources/project-list.txt"
-RESOLUTION = 1000
+RESOLUTION = 100
 
 
 def fn(x, a, b, c):
@@ -28,7 +28,7 @@ def linear_regression(X, Y):
     regressor.fit(X, Y)
 
     pred_axis = [i / RESOLUTION for i in range(0, RESOLUTION)]
-    avg_0, avg_1 = 0.5, 0
+    avg_0, avg_1 = np.average(X[:, 0]), np.average(X[:, 1])
     Y_pred_0 = regressor.predict([[i, avg_1] for i in pred_axis])
     Y_pred_1 = regressor.predict([[avg_0, i] for i in pred_axis])
     plt.plot(pred_axis, Y_pred_0, color='red')
