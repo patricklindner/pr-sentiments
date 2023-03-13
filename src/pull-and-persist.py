@@ -27,9 +27,9 @@ for owner, repo in reader:
             pull_request = PullRequest(pr_json)
             try:
                 collection.insert_one(pull_request.to_json())
-                print('.', end='')
+                print('.', end='', flush=True)
             except DuplicateKeyError:
-                print('D', end='')
+                print('D', end='', flush=True)
                 if not pageIterator.jumped:
                     pageIterator.jump(collection.count_documents({}))
             except Exception as e:

@@ -1,3 +1,7 @@
+from time import sleep
+import requests
+
+
 class PullRequest():
     """
     This class holds the data for pull requests.
@@ -6,15 +10,40 @@ class PullRequest():
 
     def __init__(self, base_json: dict) -> None:
         self.response_json = base_json
+        self.my_json = self._request_self()
+        self.comment_json = self._request_comments()
 
-    def _get_line_count(self):
-        pass
+    def _request_self(self):
+        links = self.response_json['_links']
+        response_self = requests.get(
+            links['self']['href'],
+            headers=self.__get_token_header()
+        )
 
-    def _get_reviewers(self):
-        pass
+        if response_self.status_code != 200:
+            print(response_self.text)
+            sleep(2)
+            return self._request_self()
+        return response_self.json()
 
-    def _get_comments(self):
-        pass
+    def _request_comments(self):
+        links = self.response_json['_links']
+        response_comments = requests.get(
+            links['comments']['href'],
+            headers=self.__get_token_header()
+        )
+
+        if response_comments.status_code != 200:
+            print(response_comments.text)
+            sleep(2)
+            return self._request_comments()
+        return response_comments.json()
+
+    def comment_to_json(self, comment):
+        return {
+            "text": comment['body'],
+            'user_id': comment['user']['id']
+        }
 
     def to_json(self) -> dict:
         return {
@@ -24,5 +53,17 @@ class PullRequest():
             "created_at": self.response_json["created_at"],
             "closed_at": self.response_json["closed_at"],
             "merged_at": self.response_json["merged_at"],
-            "user_id": self.response_json["user"]["id"]
+            "user_id": self.response_json["user"]["id"],
+            "additions": self.my_json["additions"],
+            "deletions": self.my_json["deletions"],
+            "changed_files": self.my_json["changed_files"],
+            "comments": [self.comment_to_json(c) for c in self.comment_json]
         }
+
+    @staticmethod
+    def __get_token_header():
+        with open("../resources/token.txt", "r") as token_file:
+            token = token_file.readline()
+            if token != "":
+                return {"Authorization": "Bearer " + token}
+        raise AssertionError("Token file could not be read")
