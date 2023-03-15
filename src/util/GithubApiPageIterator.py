@@ -1,8 +1,10 @@
+import os.path
 import re
 
 import requests
 from urllib.parse import urlparse, ParseResult, parse_qs, urlencode
 
+FAILED_REQUESTS_FILE = "../logs/failed-requests.txt"
 
 class GithubApiPageIterator:
 
@@ -34,13 +36,20 @@ class GithubApiPageIterator:
                 headers={"Authorization": "Bearer " + self.__get_token()}
             )
             self.first_request = False
-            if resp.status_code >= 200:
+            if 200 <= resp.status_code <= 300:
                 print("Fetched from:", resp.url)
                 self.next_url = self.__extract_next_link(resp.headers.get("link"))
                 self.page_number += 1
                 return resp.json()
             else:
-                print("Something went wrong", resp)
+                print("Something went wrong while fetching url", resp.url)
+                print("logging failed url to file")
+                if os.path.exists(FAILED_REQUESTS_FILE):
+                    write_mode = "a"
+                else:
+                    write_mode = "w"
+                with open(FAILED_REQUESTS_FILE, write_mode) as failed_log_file:
+                    failed_log_file.write(resp.url + "\n")
 
     def jump(self, collection_size):
         """
