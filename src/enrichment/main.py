@@ -15,8 +15,8 @@ from pymongo.collection import Collection
 DB_NAME = 'pull-requests-raw'
 REPO_FILE_PATH = "../resources/project-list.txt"
 RESOLUTION = 100
-BATCH_SIZE = 40
-MAX_WORKERS = 20
+BATCH_SIZE = 25
+MAX_WORKERS = 25
 REQUESTS_PER_PR = 2
 
 
@@ -41,7 +41,9 @@ async def enrich_batch(batch: list, repository_collection: Collection):
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         loop = asyncio.get_event_loop()
         futures = [
-            loop.run_in_executor(executor, enrich_pull_request, batch[i])
+            loop.run_in_executor(
+                executor, enrich_pull_request, batch[i], repository_collection
+            )
             for i in range(BATCH_SIZE)
         ]
 
