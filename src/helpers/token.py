@@ -3,7 +3,7 @@ from time import sleep
 import requests
 
 
-TOKEN_PATH = "../resources/token.txt"
+TOKEN_PATH = "./resources/token.txt"
 LIMIT_URL = "https://api.github.com/rate_limit"
 
 

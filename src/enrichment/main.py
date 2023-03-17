@@ -5,7 +5,7 @@ dataset.
 
 from src.util.mongo import get_database
 from src.util.ProjectListReader import ProjectListReader
-from src.enrichment.token import sleeper
+from src.helpers.token import sleeper
 from src.enrichment.enricher import enrich_pull_request
 
 import asyncio

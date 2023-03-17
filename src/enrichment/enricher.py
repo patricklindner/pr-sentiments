@@ -1,5 +1,5 @@
 import requests
-from src.enrichment.token import get_token_header
+from src.helpers.token import get_token_header
 from pymongo.collection import Collection
 
 
