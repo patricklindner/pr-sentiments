@@ -1,39 +1,52 @@
-from src.util.GithubApiPageIterator import GithubApiPageIterator
-from src.util.ProjectListReader import ProjectListReader
-from src.util.mongo import get_database
-from src.util.PullRequest import PullRequest
-from pymongo.errors import DuplicateKeyError
+import threading
+import logging
 
-base_url = "https://api.github.com"
-pull_request_url = base_url + "/repos/{owner}/{repo}/pulls"
+from util.GithubApiPageIterator import GithubApiPageIterator
+from util.ProjectListReader import ProjectListReader
+from util.PullRequest import PullRequest
+from util.mongo import get_database
 
-reader = ProjectListReader("../resources/project-list.txt")
+from tqdm import tqdm
 
-db_raw = get_database("pull-requests-raw")
+base_url = "https://api.github.com/repos/{owner}/{repo}/pulls"
 
-for owner, repo in reader:
-    print("pulling repo", repo)
 
-    pageIterator = GithubApiPageIterator(
-        pull_request_url.replace("{owner}", owner).replace("{repo}", repo),
-        params={"state": "closed", "per_page": 100}
-    )
+def pull_and_persist(owner, repo, index):
+    logging.info(f"pulling repo {repo}")
+
+    page_iterator = iter(GithubApiPageIterator(
+        f"{owner}/{repo}",
+        base_url.replace("{owner}", owner).replace("{repo}", repo),
+        params={"state": "open", "per_page": 100}
+    ))
 
     collection = db_raw[repo]
+    it = tqdm(page_iterator, desc=repo, position=index)
     # iterate over all pages
-    for page in pageIterator:
+    for page in it:
         # iterate over all elements of page
         for pr_json in page:
             pull_request = PullRequest(pr_json)
             try:
-                collection.insert_one(pull_request.to_json())
-                print('.', end='', flush=True)
-            except DuplicateKeyError:
-                print('D', end='', flush=True)
-                if not pageIterator.jumped:
-                    pageIterator.jump(collection.count_documents({}))
+                collection.insert_one(pull_request.to_mongo_json())
+            #     print('.', end='', flush=True)
+            # except DuplicateKeyError:
+            #     print('D', end='', flush=True)
+            #     if not page_iterator.jumped:
+            #         page_iterator.jump(collection.count_documents({}))
             except Exception as e:
-                print("Unexepected Error!:", e)
-                print("Skipping pull request with id", pr_json["id"])
-        print()
-        pageIterator.print_progress()
+                logging.warning(f"Unexepected Error!: {e}")
+                logging.warning(f"Skipping pull request with id {pr_json['id']}")
+
+
+if __name__ == '__main__':
+
+    logging.basicConfig(filename="../logs/warn.log")
+    # logging.basicConfig(level=logging.INFO)
+    reader = ProjectListReader("../resources/project-list.txt")
+    db_raw = get_database("pull-requests-raw")
+
+    pull_and_persist("opencv", "opencv", 0)
+    # for i, (owner, repo) in enumerate(reader):
+    #     t = threading.Thread(target=pull_and_persist, args=(owner, repo, i), name=repo)
+    #     t.start()

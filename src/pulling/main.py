@@ -6,7 +6,7 @@ from pymongo.errors import DuplicateKeyError
 
 BASE_URL = "https://api.github.com/repos/{owner}/{repo}/pulls"
 DB_NAME = 'pull-requests-raw'
-REPO_FILE_PATH = "../resources/project-list.txt"
+REPO_FILE_PATH = "../../resources/project-list.txt"
 
 
 def main():
@@ -29,7 +29,7 @@ def pull_repository(owner, repo, collection):
         for pr_json in page:
             pull_request = PullRequest(pr_json)
             try:
-                collection.insert_one(pull_request.to_json())
+                collection.insert_one(pull_request.to_mongo_json())
                 print('.', end='', flush=True)
             except DuplicateKeyError:
                 print('D', end='', flush=True)

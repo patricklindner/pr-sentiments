@@ -1,55 +1,57 @@
 import os.path
 import re
+import logging
 
 import requests
 from urllib.parse import urlparse, ParseResult, parse_qs, urlencode
 
-FAILED_REQUESTS_FILE = "../logs/failed-requests.txt"
+FAILED_REQUESTS_FILE = "../logs/failed-requests.log"
+
 
 class GithubApiPageIterator:
 
-    def __init__(self, url, params=None):
+    def __init__(self, project_name, url, params=None):
         self.start_url = url
-        self.params = params
+        self.initial_params = params
         self.token = self.__get_token()
-        resp = requests.get(
-            url=url,
-            params=params,
-            headers={"Authorization": "Bearer " + self.token}
-        )
-        self.total_pages = int(self.__number_of_pages(resp.headers.get("link")))
+        self.fetched_result = None
+        self.total_pages = 0
+        self.project_name = project_name
+        self.current_page = 0
 
     def __iter__(self):
         self.next_url = self.start_url
-        self.first_request = True
         self.jumped = False
-        self.page_number = 0
+        self.current_page = 0
+        logging.info("Fetching initial page from: " + self.next_url+"?"+urlencode(self.initial_params))
+        resp = requests.get(
+            url=self.start_url,
+            params=self.initial_params,
+            headers={"Authorization": "Bearer " + self.token}
+        )
+        self.total_pages = int(self.__number_of_pages(resp.headers.get("link")))
+        self.__handle_response(resp)
         return self
 
+    def __len__(self):
+        return self.total_pages
+
     def __next__(self):
-        if self.next_url is None:
+        if self.fetched_result is None:
             raise StopIteration
-        else:
+
+        return_value = self.fetched_result
+        if self.next_url is not None:
+            logging.info(f"Fetching page from {self.next_url}")
             resp = requests.get(
                 url=self.next_url,
-                params=self.params if self.first_request else None,
                 headers={"Authorization": "Bearer " + self.__get_token()}
             )
-            self.first_request = False
-            if 200 <= resp.status_code <= 300:
-                print("Fetched from:", resp.url)
-                self.next_url = self.__extract_next_link(resp.headers.get("link"))
-                self.page_number += 1
-                return resp.json()
-            else:
-                print("Something went wrong while fetching url", resp.url)
-                print("logging failed url to file")
-                if os.path.exists(FAILED_REQUESTS_FILE):
-                    write_mode = "a"
-                else:
-                    write_mode = "w"
-                with open(FAILED_REQUESTS_FILE, write_mode) as failed_log_file:
-                    failed_log_file.write(resp.url + "\n")
+            self.__handle_response(resp)
+            self.current_page += 1
+        else:
+            self.fetched_result = None
+        return return_value
 
     def jump(self, collection_size):
         """
@@ -66,12 +68,12 @@ class GithubApiPageIterator:
         query_filters = parse_qs(parsed.query)
         query_filters = {key: query_filters[key][0] for key in query_filters}
         per_page = query_filters['per_page']
-        self.page_number = collection_size // int(per_page) + 1
+        self.current_page = collection_size // int(per_page) + 1
 
-        if self.page_number >= self.total_pages:
+        if self.current_page >= self.total_pages:
             self.next_url = None
         else:
-            query_filters['page'] = self.page_number
+            query_filters['page'] = self.current_page
             self.next_url = ParseResult(
                 scheme=parsed.scheme,
                 netloc=parsed.hostname,
@@ -82,8 +84,30 @@ class GithubApiPageIterator:
             ).geturl()
 
     def print_progress(self):
-        percent = self.page_number / self.total_pages * 100
+        percent = self.current_page / self.total_pages * 100
+        # print(f"processing page {self.current_page}/{self.total_pages}")
         print(f"progress {percent:.2f}%")
+
+    def __handle_response(self, resp):
+        if 200 <= resp.status_code < 300:
+            self.fetched_result = resp.json()
+            self._set_next_url(resp)
+        else:
+            self.__handle_http_error(resp)
+
+    @staticmethod
+    def __handle_http_error(resp):
+        logging.warning(f"Something went wrong while fetching url {resp.url}")
+        logging.warning("logging failed url to file")
+        if os.path.exists(FAILED_REQUESTS_FILE):
+            write_mode = "a"
+        else:
+            write_mode = "w"
+        with open(FAILED_REQUESTS_FILE, write_mode) as failed_log_file:
+            failed_log_file.write(resp.url + "\n")
+
+    def _set_next_url(self, resp):
+        self.next_url = self.__extract_next_link(resp.headers.get("link"))
 
     @staticmethod
     def __extract_next_link(link_string):

@@ -374,4 +374,4 @@ pip-selfcheck.json
 
 resources/token.txt
 
-**/failed-requests.txt
+**/failed-requests.log
