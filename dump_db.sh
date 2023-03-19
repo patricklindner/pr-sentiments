@@ -1,8 +1,8 @@
 #!/bin/bash
 
-filename=resources/project-list.txt
-username=root
-password=s3cert
+export filename=resources/project-list.txt
+export username=root
+export password=s3cert
 
 # Check if the file exists and is readable
 if [ ! -r "$filename" ]; then
@@ -18,7 +18,7 @@ while read -r line; do
     
 	# Dump the collection into a json file
 	echo -e "\tDumping $repo..."
-	docker exec pr_sentiment_mongo mongoexport --username=$username --password=$password --authenticationDatabase=admin --db=pull-requests-raw --collection="$repo" --out="/tmp/dumps/raw/$repo.json"
+	docker exec pr_sentiment_mongo mongoexport --username=root --password=s3cret --authenticationDatabase=admin --db=pull-requests-raw --collection="$repo" --out="/tmp/dumps/raw/$repo.json"
 done < "$filename"
 
 echo "done."

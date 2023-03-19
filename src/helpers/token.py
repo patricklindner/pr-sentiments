@@ -3,7 +3,7 @@ from time import sleep
 import requests
 
 
-TOKEN_PATH = "./resources/token.txt"
+TOKEN_PATH = "../resources/token.txt"
 LIMIT_URL = "https://api.github.com/rate_limit"
 
 
@@ -51,3 +51,7 @@ def sleeper(number_of_requests: int = 1):
 
 
 sleeper.remaining = get_remaining_requests()
+
+
+if __name__ == "__main__":
+    print(get_remaining_requests())

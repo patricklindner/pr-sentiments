@@ -18,18 +18,24 @@ class GithubApiPageIterator:
         self.total_pages = 0
         self.project_name = project_name
         self.current_page = 0
+        self.log = logging.getLogger(project_name)
 
     def __iter__(self):
         self.next_url = self.start_url
         self.jumped = False
         self.current_page = 0
-        logging.info("Fetching initial page from: " + self.next_url+"?"+urlencode(self.initial_params))
+        # initial request has to be made here in order to find the total number of pages
+        self.log.info("Fetching initial page from: " + self.start_url+"?"+urlencode(self.initial_params))
         resp = requests.get(
             url=self.start_url,
             params=self.initial_params,
             headers={"Authorization": "Bearer " + self.token}
         )
-        self.total_pages = int(self.__number_of_pages(resp.headers.get("link")))
+        if resp.headers.get("link") is not None:
+            self.total_pages = int(self.__number_of_pages(resp.headers.get("link")))
+        else:
+            self.total_pages = 1
+        self.log.info(f"Number of total pages: {self.total_pages}")
         self.__handle_response(resp)
         return self
 
@@ -42,15 +48,15 @@ class GithubApiPageIterator:
 
         return_value = self.fetched_result
         if self.next_url is not None:
-            logging.info(f"Fetching page from {self.next_url}")
+            self.log.info(f"Fetching page from {self.next_url}")
             resp = requests.get(
                 url=self.next_url,
                 headers={"Authorization": "Bearer " + self.__get_token()}
             )
             self.__handle_response(resp)
-            self.current_page += 1
         else:
             self.fetched_result = None
+        self.current_page += 1
         return return_value
 
     def jump(self, collection_size):
@@ -83,11 +89,6 @@ class GithubApiPageIterator:
                 fragment=parsed.fragment
             ).geturl()
 
-    def print_progress(self):
-        percent = self.current_page / self.total_pages * 100
-        # print(f"processing page {self.current_page}/{self.total_pages}")
-        print(f"progress {percent:.2f}%")
-
     def __handle_response(self, resp):
         if 200 <= resp.status_code < 300:
             self.fetched_result = resp.json()
@@ -95,10 +96,9 @@ class GithubApiPageIterator:
         else:
             self.__handle_http_error(resp)
 
-    @staticmethod
-    def __handle_http_error(resp):
-        logging.warning(f"Something went wrong while fetching url {resp.url}")
-        logging.warning("logging failed url to file")
+    def __handle_http_error(self, resp):
+        self.log.warning(f"Something went wrong while fetching url {resp.url}")
+        self.log.warning("logging failed url to file")
         if os.path.exists(FAILED_REQUESTS_FILE):
             write_mode = "a"
         else:
@@ -107,7 +107,10 @@ class GithubApiPageIterator:
             failed_log_file.write(resp.url + "\n")
 
     def _set_next_url(self, resp):
-        self.next_url = self.__extract_next_link(resp.headers.get("link"))
+        if resp.headers.get("link") is not None:
+            self.next_url = self.__extract_next_link(resp.headers.get("link"))
+        else:
+            self.next_url = None
 
     @staticmethod
     def __extract_next_link(link_string):
@@ -117,8 +120,8 @@ class GithubApiPageIterator:
         else:
             return None
 
-    @staticmethod
-    def __number_of_pages(link_string):
+    def __number_of_pages(self, link_string):
+        self.log.info(f"link string {link_string}")
         match = re.search('(?<=<)[\\S]*page=(\\d+)(?=>; rel="last")', link_string)
         if match:
             return match.group(1)
