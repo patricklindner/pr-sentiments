@@ -16,6 +16,7 @@ class PullRequest():
             "closed_at": self.response_json["closed_at"],
             "merged_at": self.response_json["merged_at"],
             "user_id": self.response_json["user"]["id"],
+            "number": self.response_json["number"]
             # we can better not persist the urls as string for the sake of disc space, They can be build easily using the pull id
         }
 

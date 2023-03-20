@@ -1,7 +1,7 @@
 import logging
 import threading
 
-from rich.progress import Progress
+import requests
 
 from util.GithubApiPageIterator import GithubApiPageIterator
 from util.ProjectListReader import ProjectListReader
@@ -11,7 +11,7 @@ from util.mongo import get_database
 base_url = "https://api.github.com/repos/{owner}/{repo}/pulls"
 
 
-def pull_and_persist(owner, repo, progress_bar):
+def pull_and_persist(owner, repo):
     logging.info(f"pulling repo {repo}")
     collection = db_raw[repo]
 
@@ -21,8 +21,7 @@ def pull_and_persist(owner, repo, progress_bar):
         params={"state": "closed", "per_page": 100}
     ))
 
-    progress_task = progress_bar.add_task(f"{owner}/{repo}", total=len(page_iterator))
-    # bar = tqdm(page_iterator, desc=f"{repo.ljust(25)}", ncols=100, leave=False)
+    requests.post(f"http://localhost:5000/progress/{repo}/{len(page_iterator)}")
     # iterate over all pages
     # do not use a for loop since it would call the __iter__ function again,
     # which results in fetching the initial request again
@@ -37,7 +36,7 @@ def pull_and_persist(owner, repo, progress_bar):
                 except Exception as e:
                     logging.warning(f"Unexepected Error!: {e}")
 
-            progress_bar.update(progress_task, advance=1)
+            requests.put(f"http://localhost:5000/progress/{repo}")
         except StopIteration:
             break
 
@@ -45,22 +44,15 @@ def pull_and_persist(owner, repo, progress_bar):
 if __name__ == '__main__':
 
     logging.basicConfig(
-        filename="../logs/warn.log",
-        filemode="w",
         format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
-        level=logging.INFO,
-
+        level=logging.INFO
     )
     reader = ProjectListReader("../resources/project-list.txt")
     db_raw = get_database("pull-requests-raw")
 
-    with Progress() as progress_bar:
-        threads = list()
-        # pull_and_persist("ant-design", "ant-design", 12)
-        for owner, repo in reader:
-            t = threading.Thread(target=pull_and_persist, args=(owner, repo, progress_bar), name=repo)
-            threads.append(t)
-            t.start()
-
-        for thread in threads:
-            thread.join()
+    # with Progress() as progress_bar:
+    # threads = list()
+    # pull_and_persist("ant-design", "ant-design")
+    for owner, repo in reader:
+        t = threading.Thread(target=pull_and_persist, args=(owner, repo), name=repo)
+        t.start()

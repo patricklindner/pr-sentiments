@@ -19,3 +19,6 @@ scikit-learn==1.2.2
 matplotlib==3.7.1
 python-dateutil==2.8.2
 numpy==1.24.2
+Flask==2.2.3
+Flask-SocketIO==5.3.3
+
