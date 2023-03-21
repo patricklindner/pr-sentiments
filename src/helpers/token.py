@@ -33,7 +33,7 @@ def sleep_till(end: datetime):
     till_reset = end - now
     seconds_till_reset = till_reset.seconds
     print(f"Out of requests, sleeping for: {str(till_reset)}")
-    sleep(seconds_till_reset + 1)
+    sleep(seconds_till_reset + 10)
 
 
 def sleeper(number_of_requests: int = 1):
@@ -44,7 +44,6 @@ def sleeper(number_of_requests: int = 1):
             sleeper.remaining = get_remaining_requests()
 
             fn(*args, **kwargs)
-            sleep(3)
 
         return wrapper
     return decorator

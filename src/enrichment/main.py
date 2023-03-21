@@ -59,7 +59,7 @@ async def enrich_batch(
                 batch[i],
                 repository_collection,
                 repository_url
-            ) for i in range(BATCH_SIZE)
+            ) for i in range(len(batch))
         ]
 
         for enriched_pull_request in await asyncio.gather(*futures):
@@ -81,7 +81,7 @@ def enrich_repository_collection(
     size = repository_collection.count_documents({})
     for i in range(0, size, BATCH_SIZE):
         print_loading_bar(i, size)
-        batch_query = repository_collection.find({}).skip(i).limit(size)
+        batch_query = repository_collection.find({}).skip(i).limit(BATCH_SIZE)
         batch = list(batch_query)
         async_batch(batch, repository_collection, repository_url)
     print_finished_load_bar()

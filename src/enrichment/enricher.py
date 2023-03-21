@@ -1,6 +1,7 @@
 import requests
 from src.helpers.token import get_token_header
 from pymongo.collection import Collection
+from time import sleep
 
 
 def enrich_user_data(data: dict, collection: Collection):
@@ -87,6 +88,7 @@ def enrich_based_on_pull_request_api(data, base_url):
     headers = get_token_header()
     pull_url = base_url + f"/{data['number']}"
     response_pull_request = requests.get(pull_url, headers=headers)
+    sleep(2)  # Lets not flood the git API
 
     if response_pull_request.status_code == 200:
         pull_request = response_pull_request.json()
@@ -104,6 +106,7 @@ def enrich_based_on_comment_api(data, base_url):
     headers = get_token_header()
     comments_url = base_url + f"/{data['number']}/comments"
     response_comments = requests.get(comments_url, headers=headers)
+    sleep(2)  # Lets not flood the git API
 
     if response_comments.status_code == 200:
         comments = response_comments.json()
