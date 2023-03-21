@@ -39,9 +39,9 @@ def sleep_till(end: datetime):
 def sleeper(number_of_requests: int = 1):
     def decorator(fn):
         def wrapper(*args, **kwargs):
+            sleeper.remaining = get_remaining_requests()
             if sleeper.remaining - number_of_requests < 0:
                 sleep_till(get_time_of_reset())
-            sleeper.remaining = get_remaining_requests()
 
             fn(*args, **kwargs)
 
