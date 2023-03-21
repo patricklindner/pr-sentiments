@@ -30,13 +30,13 @@ def enrich_pr_data(data: dict, pull_request: dict):
     Args:
         data (dict): The pull request data so far
     """
-    data['project'] = dict()
-    data['project']['added'] = pull_request['additions']
-    data['projec']['removed'] = pull_request['deletions']
+    data['pull_request'] = dict()
+    data['pull_request']['added'] = pull_request['additions']
+    data['pull_request']['removed'] = pull_request['deletions']
     requested_reviewers = pull_request['requested_reviewers']
-    data['project']['request_reviewers'] = len(requested_reviewers)
-    data['project']['commits'] = pull_request['commits']
-    data['project']['changed_files'] = pull_request['changed_files']
+    data['pull_request']['request_reviewers'] = len(requested_reviewers)
+    data['pull_request']['commits'] = pull_request['commits']
+    data['pull_request']['changed_files'] = pull_request['changed_files']
 
 
 def enrich_project_data(data: dict, project: dict):
@@ -72,37 +72,45 @@ def enrich_comments_data(data: dict, comments: dict):
         data (dict): The pull request data so far
     """
     data['comments_count'] = len(comments)
-    participants = set([c['user']['id'] for c in comments])
+    participants = set([c['user']['id'] for c in comments if c['user']])
     data['comments_participants'] = len(participants)
     data['comments'] = [
         {'user_id': comment['user']['id'], 'text': comment['body']}
-        for comment in comments
+        for comment in comments if comment['user']
     ]
 
 
-def enrich_based_on_pull_request_api(data):
+def enrich_based_on_pull_request_api(data, base_url):
     if data.get('pull_request') and data.get('project'):
         return
 
     headers = get_token_header()
-    response_pull_request = requests.get(data['url'], headers=headers)
+    pull_url = base_url + f"/{data['number']}"
+    response_pull_request = requests.get(pull_url, headers=headers)
 
     if response_pull_request.status_code == 200:
         pull_request = response_pull_request.json()
         enrich_pr_data(data, pull_request)
         enrich_project_data(data, pull_request['base']['repo'])
+    else:
+        print(response_pull_request.status_code)
+        print(response_pull_request.json())
 
 
-def enrich_based_on_comment_api(data):
-    if data.get('comments'):
+def enrich_based_on_comment_api(data, base_url):
+    if data.get('comments') or data.get('comments') == []:
         return
 
     headers = get_token_header()
-    response_comments = requests.get(data['comments_url'], headers=headers)
+    comments_url = base_url + f"/{data['number']}/comments"
+    response_comments = requests.get(comments_url, headers=headers)
 
     if response_comments.status_code == 200:
         comments = response_comments.json()
         enrich_comments_data(data, comments)
+    else:
+        print(response_comments.status_code)
+        print(response_comments.json())
 
 
 def enrich_based_on_repository_collection(data, collection: Collection):
@@ -112,8 +120,8 @@ def enrich_based_on_repository_collection(data, collection: Collection):
     enrich_user_data(data, collection)
 
 
-def enrich_pull_request(data: dict, collection: Collection):
-    enrich_based_on_pull_request_api(data)
-    enrich_based_on_comment_api(data)
+def enrich_pull_request(data: dict, collection: Collection, base_url: str):
+    enrich_based_on_pull_request_api(data, base_url)
+    enrich_based_on_comment_api(data, base_url)
     enrich_based_on_repository_collection(data, collection)
     return data
