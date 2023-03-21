@@ -18,8 +18,8 @@ while read -r line; do
     
 	# Dump the collection into a json file
 	echo -e "\tDumping $repo..."
-	docker exec pr_sentiment_mongo mongoexport --username="$username" --password="$password" --authenticationDatabase=admin --db=pull-requests-raw --collection="$repo" --out="/tmp/dumps/clean/$repo.json"
-	docker exec pr_sentiment_mongo mongoexport --username="$username" --password="$password" --authenticationDatabase=admin --db=pull-requests-clean --collection="$repo" --out="/tmp/dumps/clean/$repo.json"
+	#docker exec pr_sentiment_mongo mongoexport --username="$username" --password="$password" --authenticationDatabase=admin --db=pull-requests-raw --collection="$repo" --out="/tmp/dumps/clean/$repo.json"
+	docker exec pr_sentiment_mongo mongoexport --username="$username" --password="$password" --authenticationDatabase=admin --db=pull-requests-clean --collection="$repo" --out="/tmp/dumps/enriched/$repo.json"
 
 done < "$filename"
 
