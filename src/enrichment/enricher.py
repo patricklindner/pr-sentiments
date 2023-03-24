@@ -2,20 +2,27 @@ import requests
 from src.helpers.token import get_token_header
 from pymongo.collection import Collection
 from time import sleep
+from dateutil import parser
 
 
-def enrich_user_data(data: dict, collection: Collection):
+def enrich_user_data(data: dict, user_pull_requests: list):
     """
     This function adds information about the author of a pull request.
     Namely:
-        - Number of pull requests this user has made in this repo (TODO)
+        - Number of pull requests this user has made in this repo
         - Number of followers of the user (TODO)
 
     Args:
         data (dict): The pull request data so far
     """
-    data['user'] = None
-    pass
+    data['user'] = dict()
+    now = parser.parse(data['created_at'])
+    previous_prs = [
+        pull_request
+        for pull_request in user_pull_requests
+        if parser.parse(pull_request['created_at']) < now
+    ]
+    data['user']['previous_pr_count'] = len(previous_prs)
 
 
 def enrich_pr_data(data: dict, pull_request: dict):
@@ -120,7 +127,8 @@ def enrich_based_on_repository_collection(data, collection: Collection):
     if data.get('user'):
         return
 
-    enrich_user_data(data, collection)
+    user_pull_requests = collection.find({'user_id': data['user_id']})
+    enrich_user_data(data, user_pull_requests)
 
 
 def enrich_pull_request(data: dict, collection: Collection, base_url: str):
