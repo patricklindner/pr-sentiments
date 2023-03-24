@@ -12,9 +12,9 @@ def print_loading_bar(i: int, total: int, length: int = BAR_LENGTH):
 
 
 def print_finished_load_bar(length: int = BAR_LENGTH):
-    print_loading_bar(1, 1)
+    print_loading_bar(i=1, total=1, length=length)
     print()
 
 
 def print_empty_load_bar(length: int = BAR_LENGTH):
-    print_loading_bar(0, 1)
+    print_loading_bar(i=0, total=1, length=length)
