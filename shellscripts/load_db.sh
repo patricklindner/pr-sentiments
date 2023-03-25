@@ -20,7 +20,7 @@ while read -r line; do
 	echo -e "\tLoading collection $repo..."
     jscommand=$(echo "db.$repo.drop()")
     docker exec pr_sentiment_mongo mongoimport --username="$username" --password="$password" --authenticationDatabase=admin --db=pull-requests-raw --collection="$repo" --file="/tmp/dumps/raw/$repo.json"
-    docker exec pr_sentiment_mongo mongoimport --username="$username" --password="$password" --authenticationDatabase=admin --db=pull-requests-clear --collection="$repo" --file="/tmp/dumps/raw/$repo.json"
+    docker exec pr_sentiment_mongo mongoimport --username="$username" --password="$password" --authenticationDatabase=admin --db=pull-requests-clear --collection="$repo" --file="/tmp/dumps/enriched/$repo.json"
 
 done < "$filename"
 

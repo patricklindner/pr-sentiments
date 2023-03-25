@@ -16,10 +16,12 @@ while read -r line; do
 	# Extract the repo from the line using the '/' delimiter
 	repo=$(echo "$line" | cut -d "/" -f2)
 
-	# Dump the collection into a json file
+	# Drop the collection from mongoDB
 	echo -e "\tDropping collection $repo..."
     jscommand=$(echo "db.$repo.drop()")
     docker exec pr_sentiment_mongo mongo pull-requests-raw -u $username -p $password --authenticationDatabase admin --eval $jscommand
+    docker exec pr_sentiment_mongo mongo pull-requests-clean -u $username -p $password --authenticationDatabase admin --eval $jscommand
+	docker exec pr_sentiment_mongo mongo pull-requests-sentiment -u $username -p $password --authenticationDatabase admin --eval $jscommand
 
 done < "$filename"
 
