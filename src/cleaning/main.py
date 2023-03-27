@@ -51,7 +51,7 @@ def is_dirty_row(row: dict):
     if 'comments_participants' not in row.keys():
         return False
 
-    if row.get('comments_count') == 0:
+    if row.get('comments') == []:
         return True
 
     if 'author_comment_average' not in row.keys():
