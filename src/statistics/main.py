@@ -6,7 +6,7 @@ from dateutil import parser
 import pandas as pd
 from pymongo.collection import Collection
 
-from src.statistics.distribution import plot_distribution
+from src.statistics.distribution import explore_distribution
 from src.statistics.regression import plot_logistic_regression
 
 DB_NAME = 'pull-requests-sentiment-clean'
@@ -40,11 +40,10 @@ def main(in_file: str = None, out_file: str = None):
         df = load_data(database)
 
     if out_file:
-        df.to_csv(out_file)
+        df.to_csv(out_file, index=False)
 
     normalize_df = (df-df.mean())/df.std()
-    # normalize_df.corr('pearson')
-    plot_distribution(normalize_df)
+    explore_distribution(normalize_df)
     plot_logistic_regression(normalize_df)
 
 
@@ -101,4 +100,4 @@ def load_row_data(row: dict) -> list:
 
 if __name__ == "__main__":
     print("Lets do some statistical analysis!")
-    main(in_file='cache.csv', out_file='cache.csv')
+    main(in_file='cache.csv')
