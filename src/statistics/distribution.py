@@ -5,14 +5,36 @@ import pandas as pd
 
 def explore_distribution(df):
     print_correlation_matrix(df)
+    plot_distribution(df, [
+        'time_to_merge', 'project_age', 'project_size', 'commits',
+        'comment_count', 'comment_participants', 'author_pr_count'
+    ])
+    plot_distribution(df, [
+        'body_polarity', 'body_subjectivity', 'author_comment_polarity',
+        'author_comment_subjectivity', 'reviewer_comment_polarity',
+        'reviewer_comment_subjectivity'
+    ])
     plot_scatter_controlled(df)
     plot_scatter_explanatory(df)
 
 
 def print_correlation_matrix(df):
     df_colleration = df.corr(method='pearson')
-    with pd.option_context('display.max_columns', None):
-        print(df_colleration)
+    pd.set_option('display.max_rows', None)
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.width', 200)
+    print(df_colleration)
+
+
+def plot_distribution(df, cols):
+    fig, axes = plt.subplots()
+    axes.violinplot(dataset=[df[c].values for c in cols])
+    axes.set_title('Distribution of variables')
+    axes.yaxis.grid(True)
+    axes.set_xlabel('Normalized values')
+    plt.ylim(-2.5, 2.5)
+    plt.xticks(list(range(1, len(cols) + 1)), cols, rotation=20)
+    plt.show()
 
 
 def plot_scatter_controlled(df):
