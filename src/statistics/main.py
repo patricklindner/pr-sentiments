@@ -26,16 +26,24 @@ DF_COLUMNS = [
     "comment_participants",
     "author_pr_count",
     "author_comment_polarity",
-    "author_comment_subjectivety",
+    "author_comment_subjectivity",
     "reviewer_comment_polarity",
     "reviewer_comment_subjectivity"
 ]
 
 
-def main():
-    database = get_database(DB_NAME)
-    df = load_data(database)
+def main(in_file: str = None, out_file: str = None):
+    if in_file:
+        df = pd.read_csv(in_file)
+    else:
+        database = get_database(DB_NAME)
+        df = load_data(database)
+
+    if out_file:
+        df.to_csv(out_file)
+
     normalize_df = (df-df.mean())/df.std()
+    # normalize_df.corr('pearson')
     plot_distribution(normalize_df)
     plot_logistic_regression(normalize_df)
 
@@ -53,7 +61,7 @@ def load_data(database) -> pd.DataFrame:
         length += collection_size
 
     print(f'finished loading {length} rows!')
-    print(df)
+    return df
 
 
 def load_collection(collection: Collection, df: pd.DataFrame, shift: int):
@@ -71,26 +79,26 @@ def load_row_data(row: dict) -> list:
     merge_time = parser.parse(row['merged_at'])
     birth_day = parser.parse(row['project']['created_at'])
     return [
-        row['body']['polarity'],
-        row['body']['subjectivity'],
-        (merge_time - create_time).seconds / 60,
-        row['pull_request']['added'],
-        row['pull_request']['removed'],
-        row['pull_request']['commits'],
-        row['pull_request']['changed_files'],
-        create_time.weekday() > 5,
-        row['project']['size'],
-        (create_time - birth_day).days,
-        row['comments_count'],
-        row['comments_participants'],
-        row['user']['previous_pr_count'],
-        row['author_comment_average']['polarity'],
-        row['author_comment_average']['subjectivity'],
-        row['review_comment_average']['polarity'],
-        row['review_comment_average']['subjectivity'],
+        float(row['body']['polarity']),
+        float(row['body']['subjectivity']),
+        float((merge_time - create_time).seconds / 60),
+        int(row['pull_request']['added']),
+        int(row['pull_request']['removed']),
+        int(row['pull_request']['commits']),
+        int(row['pull_request']['changed_files']),
+        bool(create_time.weekday() > 5),
+        int(row['project']['size']),
+        float((create_time - birth_day).days),
+        int(row['comments_count']),
+        int(row['comments_participants']),
+        int(row['user']['previous_pr_count']),
+        float(row['author_comment_average']['polarity']),
+        float(row['author_comment_average']['subjectivity']),
+        float(row['review_comment_average']['polarity']),
+        float(row['review_comment_average']['subjectivity'])
     ]
 
 
 if __name__ == "__main__":
     print("Lets do some statistical analysis!")
-    main()
+    main(in_file='cache.csv', out_file='cache.csv')
