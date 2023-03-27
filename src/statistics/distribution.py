@@ -1,10 +1,18 @@
 import matplotlib.pyplot as plt
 from scipy.stats import linregress
+import pandas as pd
 
 
 def explore_distribution(df):
+    print_correlation_matrix(df)
     plot_scatter_controlled(df)
     plot_scatter_explanatory(df)
+
+
+def print_correlation_matrix(df):
+    df_colleration = df.corr(method='pearson')
+    with pd.option_context('display.max_columns', None):
+        print(df_colleration)
 
 
 def plot_scatter_controlled(df):
@@ -37,9 +45,9 @@ def plot_with_best_fit(df, xs: str, ys: str, line_color='r'):
     plt.plot(df[xs], c + m*df[xs], line_color, label='best fit line')
     plt.legend(('data', 'best-fit'))
     plt.title((
-        f"Linear correlation between {xs} and {ys} found with\n"
-        f"slope:{m}, intercept:{c}, r:{r}, p:{p}, str_error:{std_err}"
+        f"Linear correlation between {xs} and {ys} found with\nslope:{m:.2}, "
+        f"intercept:{c:.2}, r:{r:.2}, p:{p:.2}, str_error:{std_err:.2}"
     ))
-    plt.xlabel(xs)
-    plt.ylabel(ys)
+    plt.xlabel(xs + " normalized")
+    plt.ylabel(ys + " normalized")
     plt.show()
