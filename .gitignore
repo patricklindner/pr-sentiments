@@ -375,3 +375,5 @@ pip-selfcheck.json
 resources/token.txt
 
 **/failed-requests.log
+
+figs/*.png

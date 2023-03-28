@@ -1,8 +1,8 @@
 #!/bin/bash
 
 filename=resources/project-list.txt
-username=admin
-password=password
+username=root
+password=s3cret
 
 # Check if the file exists and is readable
 if [ ! -r "$filename" ]; then
@@ -20,7 +20,9 @@ while read -r line; do
 	echo -e "\tLoading collection $repo..."
     jscommand=$(echo "db.$repo.drop()")
     docker exec pr_sentiment_mongo mongoimport --username="$username" --password="$password" --authenticationDatabase=admin --db=pull-requests-raw --collection="$repo" --file="/tmp/dumps/raw/$repo.json"
-    docker exec pr_sentiment_mongo mongoimport --username="$username" --password="$password" --authenticationDatabase=admin --db=pull-requests-clear --collection="$repo" --file="/tmp/dumps/enriched/$repo.json"
+    docker exec pr_sentiment_mongo mongoimport --username="$username" --password="$password" --authenticationDatabase=admin --db=pull-requests-clean --collection="$repo" --file="/tmp/dumps/clean/$repo.json"
+    docker exec pr_sentiment_mongo mongoimport --username="$username" --password="$password" --authenticationDatabase=admin --db=pull-requests-enriched --collection="$repo" --file="/tmp/dumps/enriched/$repo.json"
+    docker exec pr_sentiment_mongo mongoimport --username="$username" --password="$password" --authenticationDatabase=admin --db=pull-requests-sentiment-clean --collection="$repo" --file="/tmp/dumps/sentiment_clean/$repo.json"
 
 done < "$filename"
 
