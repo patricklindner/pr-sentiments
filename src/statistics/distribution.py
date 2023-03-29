@@ -61,7 +61,7 @@ def plot_with_best_fit(df, xs: str, ys: str, line_color='r'):
     x_range = (-5 < df[xs]) & (df[xs] < 5)
     y_range = (-5 < df[ys]) & (df[ys] < 5)
     df = df[x_range & y_range]
-    plt.scatter(df[xs], df[ys])
+    plt.scatter(df[xs], df[ys], s=0.15)
     m, c, r, p, std_err = linregress(df[xs], df[ys])
     # plot line: y = m*x + c
     plt.plot(df[xs], c + m*df[xs], line_color, label='best fit line')
