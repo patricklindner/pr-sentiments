@@ -2,6 +2,27 @@ import matplotlib.pyplot as plt
 from scipy.stats import linregress
 import pandas as pd
 
+EXPLANTORY_VARIABLES = [
+    "body_polarity",
+    "body_subjectivity",
+    "author_comment_polarity",
+    "author_comment_subjectivity",
+    "reviewer_comment_polarity",
+    "reviewer_comment_subjectivity"
+]
+CONTROLLED_VARIABLES = [
+    "added_lines",
+    "removed_lines",
+    "commits",
+    "changed_files",
+    "is_weekend",
+    "project_size",
+    "project_age",
+    "comment_count",
+    "comment_participants",
+    "author_pr_count"
+]
+
 
 def explore_distribution(df):
     print_correlation_matrix(df)
@@ -9,11 +30,7 @@ def explore_distribution(df):
         'time_to_merge', 'project_age', 'project_size', 'commits',
         'comment_count', 'comment_participants', 'author_pr_count'
     ])
-    plot_distribution(df, [
-        'body_polarity', 'body_subjectivity', 'author_comment_polarity',
-        'author_comment_subjectivity', 'reviewer_comment_polarity',
-        'reviewer_comment_subjectivity'
-    ])
+    plot_distribution(df, EXPLANTORY_VARIABLES)
     plot_scatter_controlled(df)
     plot_scatter_explanatory(df)
 
@@ -38,23 +55,13 @@ def plot_distribution(df, cols):
 
 
 def plot_scatter_controlled(df):
-    plot_with_best_fit(df, 'added_lines', 'time_to_merge', line_color='b')
-    plot_with_best_fit(df, 'changed_files', 'time_to_merge', line_color='b')
-    plot_with_best_fit(df, 'commits', 'time_to_merge', line_color='b')
-    plot_with_best_fit(df, 'is_weekend', 'time_to_merge', line_color='b')
-    plot_with_best_fit(df, 'project_age', 'time_to_merge', line_color='b')
-    plot_with_best_fit(df, 'project_size', 'time_to_merge', line_color='b')
-    plot_with_best_fit(df, 'comment_count', 'time_to_merge', line_color='b')
-    plot_with_best_fit(df, 'author_pr_count', 'time_to_merge', line_color='b')
+    for controlled in CONTROLLED_VARIABLES:
+        plot_with_best_fit(df, controlled, 'time_to_merge', line_color='b')
 
 
 def plot_scatter_explanatory(df):
-    plot_with_best_fit(df, 'body_polarity', 'time_to_merge')
-    plot_with_best_fit(df, 'body_subjectivity', 'time_to_merge')
-    plot_with_best_fit(df, 'author_comment_polarity', 'time_to_merge')
-    plot_with_best_fit(df, 'author_comment_subjectivity', 'time_to_merge')
-    plot_with_best_fit(df, 'reviewer_comment_polarity', 'time_to_merge')
-    plot_with_best_fit(df, 'reviewer_comment_subjectivity', 'time_to_merge')
+    for explantory in EXPLANTORY_VARIABLES:
+        plot_with_best_fit(df, explantory, 'time_to_merge')
 
 
 def plot_with_best_fit(df, xs: str, ys: str, line_color='r'):
