@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from scipy.stats import linregress
+from scipy.stats import linregress, mannwhitneyu
 import pandas as pd
 
 EXPLANTORY_VARIABLES = [
@@ -79,4 +79,41 @@ def plot_with_best_fit(df, xs: str, ys: str, line_color='r'):
     ))
     plt.xlabel(xs + " normalized")
     plt.ylabel(ys + " normalized")
+    plt.show()
+
+
+def explore_subjectivity(data):
+    subjectivity_columns = EXPLANTORY_VARIABLES[1::2]
+    for column in subjectivity_columns:
+        objective = data[(data[column] < 0.01)]['time_to_merge']
+        subjective = data[(data[column] >= 0.01)]['time_to_merge']
+        print_objective_subjective_means(objective, subjective, column)
+        print(mannwhitneyu(objective.values, subjective.values))
+        plot_objective_subjective_distributions(
+            objective.values,
+            subjective.values,
+            f'Merge times for Objectvie and subjective {column[:-13]}s in PRs'
+        )
+
+
+def print_objective_subjective_means(objective, subjective, column):
+    mean_objective = objective.mean()
+    mean_subjective = subjective.mean()
+    print(f"Time to merge `{column}` as objective: {mean_objective:.4f}")
+    print(f"Time to merge `{column}` as subjective: {mean_subjective:.4f}")
+
+
+def plot_objective_subjective_distributions(
+    dist_objective,
+    dist_subjective,
+    title: str = 'Distribution Objective vs Subjective Merge Times'
+) -> None:
+    fig, axes = plt.subplots()
+    values = [dist_objective, dist_subjective]
+    axes.violinplot(dataset=values)
+    axes.boxplot(values, positions=[1, 2])
+    axes.set_title(title)
+    axes.yaxis.grid(True)
+    axes.set_ylabel('Merge Times (minutes)')
+    plt.xticks([1, 2], ['Objective', 'Subjective'], rotation=20)
     plt.show()

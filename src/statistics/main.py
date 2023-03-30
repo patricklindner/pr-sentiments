@@ -6,7 +6,10 @@ from dateutil import parser
 import pandas as pd
 from pymongo.collection import Collection
 
-from src.statistics.distribution import explore_distribution
+from src.statistics.distribution import (
+    explore_distribution,
+    explore_subjectivity
+)
 from src.statistics.regression import plot_regression
 
 DB_NAME = 'pull-requests-sentiment-clean'
@@ -43,8 +46,9 @@ def main(in_file: str = None, out_file: str = None):
         df.to_csv(out_file, index=False)
 
     normalize_df = (df-df.mean())/df.std()
-    plot_regression(normalize_df)
     explore_distribution(normalize_df)
+    explore_subjectivity(df)
+    plot_regression(normalize_df)
 
 
 def load_data(database) -> pd.DataFrame:
