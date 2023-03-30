@@ -7,7 +7,7 @@ import pandas as pd
 from pymongo.collection import Collection
 
 from src.statistics.distribution import explore_distribution
-from src.statistics.regression import plot_logistic_regression
+from src.statistics.regression import plot_regression
 
 DB_NAME = 'pull-requests-sentiment-clean'
 REPO_FILE_PATH = "./resources/project-list.txt"
@@ -43,8 +43,8 @@ def main(in_file: str = None, out_file: str = None):
         df.to_csv(out_file, index=False)
 
     normalize_df = (df-df.mean())/df.std()
+    plot_regression(normalize_df)
     explore_distribution(normalize_df)
-    plot_logistic_regression(normalize_df)
 
 
 def load_data(database) -> pd.DataFrame:
